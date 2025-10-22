@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>保有林マップ（全国）</title>
+  <title>保有林マップ</title>
   <style>
     body{font-family:sans-serif; margin:20px; background:#f7f7f7;}
     #map{width:100%; height:600px; border-radius:8px; background:#fff;}
@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<h2>保有林マップ（全国）</h2>
+<h2>保有林マップ</h2>
 <div id="map">Loading map...</div>
 
 <div class="controls">
@@ -50,7 +50,7 @@ document.getElementById('downloadBtn').addEventListener('click', ()=>{
 
 // クリア
 document.getElementById('clearBtn').addEventListener('click', ()=>{
-  if(confirm('全ての購入済み情報をクリアしますか？')){
+  if(confirm('全ての選択済の情報をクリアしますか？')){
     savePurchased([]);
     renderMap(currentGeoJson);
   }
