@@ -22,7 +22,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <script>
-const MAP_JSON_PATH = 'jpmap JP.json';  // GitHub Pages 公開後はURLに書き換え
+// 修正済み：JP.json が pmap フォルダ内にある場合
+const MAP_JSON_PATH = 'pmap/JP.json';  
 const STORAGE_KEY = 'forest_map_purchased';
 
 const chart = echarts.init(document.getElementById('map'), null, {renderer:'svg'});
