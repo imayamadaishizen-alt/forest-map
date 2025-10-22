@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>保有林マップ（全国）</title>
+  <style>
+    body{font-family:sans-serif; margin:20px; background:#f7f7f7;}
+    #map{width:100%; height:600px; border-radius:8px; background:#fff;}
+    .controls{margin-top:10px;}
+    .btn{padding:6px 12px; margin-right:6px; cursor:pointer;}
+  </style>
+</head>
+<body>
+
+<h2>保有林マップ（全国）</h2>
+<div id="map">Loading map...</div>
+
+<div class="controls">
+  <button id="clearBtn" class="btn">クリア</button>
+  <button id="downloadBtn" class="btn">CSVダウンロード</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script>
+const MAP_JSON_PATH = 'JP.json';  // GitHub Pages 公開後はURLに書き換え
+const STORAGE_KEY = 'forest_map_purchased';
+
+const chart = echarts.init(document.getElementById('map'), null, {renderer:'svg'});
+
+// 保存データ読み込み
+function loadPurchased(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e){ return []; }
+}
+function savePurchased(list){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+// CSVダウンロード
+document.getElementById('downloadBtn').addEventListener('click', ()=>{
+  const purchased = loadPurchased();
+  const csv = 'prefecture\n' + purchased.join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'purchased_prefectures.csv';
+  a.click();
+});
+
+// クリア
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  if(confirm('全ての購入済み情報をクリアしますか？')){
+    savePurchased([]);
+    renderMap(currentGeoJson);
+  }
+});
+
+let currentGeoJson = null;
+
+// GeoJSON読み込み
+fetch(MAP_JSON_PATH)
+.then(r=>r.json())
+.then(geoJson=>{
+  currentGeoJson = geoJson;
+  echarts.registerMap('Japan', geoJson);
+  renderMap(geoJson);
+})
+.catch(err=>{
+  document.getElementById('map').innerText = '地図データが読み込めません。JP.json を確認してください';
+});
+
+// 地図描画
+function renderMap(geoJson){
+  const purchased = loadPurchased();
+  const data = geoJson.features.map(f=>({
+    name: f.properties.name,
+    value: purchased.includes(f.properties.name)?1:0
+  }));
+
+  chart.setOption({
+    tooltip:{trigger:'item'},
+    series:[{
+      type:'map',
+      map:'Japan',
+      roam:true,
+      itemStyle:{borderColor:'#888', borderWidth:0.5},
+      data: data
+    }]
+  });
+
+  chart.off('click');
+  chart.on('click', params=>{
+    const name = params.name;
+    if(!name) return;
+    togglePurchased(name, geoJson);
+  });
+}
+
+// 購入済み切替
+function togglePurchased(name, geoJson){
+  const purchased = loadPurchased();
+  const idx = purchased.indexOf(name);
+  if(idx===-1) purchased.push(name);
+  else purchased.splice(idx,1);
+  savePurchased(purchased);
+
+  const newData = geoJson.features.map(f=>({
+    name: f.properties.name,
+    value: purchased.includes(f.properties.name)?1:0
+  }));
+
+  chart.setOption({
+    series:[{
+      data: newData,
+      itemStyle:{
+        areaColor: function(d){ return d.value ? '#4CAF50' : '#E0E0E0'; }
+      }
+    }]
+  });
+}
+</script>
+</body>
+</html>
